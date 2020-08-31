@@ -13,7 +13,8 @@ import aiohttp
 file_api_url = 'http://localhost:8082/api/file/v2/getLocation'
 BLOB_SERVICE_API = '2016-05-31'
 MAX_BLOB_SIZE = 268435456
-MAX_BLOCK_SIZE = 104857600
+MAX_BLOCK_SIZE = 33554432
+UPLOAD_TIMEOUT = 15 * 60
 
 
 def get_bearer_token():
@@ -131,7 +132,8 @@ async def upload_blob(local_url, remote_url, file_size):
             'Content-Type': 'application/octet-stream',
             'x-ms-blob-type': 'BlockBlob'
         }
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total = UPLOAD_TIMEOUT)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             r = await session.request('PUT', url=remote_url, data=file_data, headers=headers)
         async with r:
             if r.status == 201:
@@ -180,7 +182,8 @@ async def upload_block(session, remote_url, block_id_str, read_size, data_block)
         }
         print('Trying to send a block: %s with size of %d' % (block_id_str, read_size))
         
-        r = await session.request('PUT', url=target_url, data=data_block, headers=headers)
+        timeout = aiohttp.ClientTimeout(total=UPLOAD_TIMEOUT)
+        r = await session.request('PUT', url=target_url, data=data_block, headers=headers, timeout=timeout)
         print('response error: %d' % (r.status))
 
         async with r:
@@ -287,8 +290,6 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     signed_url = loop.run_until_complete(get_file_location('opendes'))
     
-    #signed_url = 'https://adotestfqofqosn0o4sa.blob.core.windows.net/opendes/c9fafabc-0e0d-4de9-9d76-dfd9afc8fad7?sv=2019-07-07&se=2020-09-05T05%3A14%3A48Z&skoid=0fa47244-83d8-4311-b05c-fefb49d8b0a9&sktid=58975fd3-4977-44d0-bea8-37af0baac100&skt=2020-08-29T05%3A14%3A49Z&ske=2020-09-05T05%3A14%3A48Z&sks=b&skv=2019-07-07&sr=b&sp=rcw&sig=GFfwLWQ5t9%2BOSCv%2BSbRDOddQCA0Myxy13TRTDAl2z48%3D'
-    #signed_url = 'https://adotestfqofqosn0o4sa.blob.core.windows.net/opendes/b7243757-8e60-4b14-8f11-d4b56e405828?sv=2019-07-07&se=2020-09-05T15%3A51%3A32Z&skoid=0fa47244-83d8-4311-b05c-fefb49d8b0a9&sktid=58975fd3-4977-44d0-bea8-37af0baac100&skt=2020-08-29T15%3A51%3A33Z&ske=2020-09-05T15%3A51%3A32Z&sks=b&skv=2019-07-07&sr=b&sp=rcw&sig=PjPwfJvVY%2BBfTKZ%2Bv9VUKNEbqx54UaJKxZKqQSMD1nc%3D'
     print('signedURL: ', signed_url)
 
     # 70_driver_log.txt size: 26,624 bytes
