@@ -10,7 +10,7 @@ import xml.etree.cElementTree as ET
 import asyncio
 import aiohttp
 
-file_api_url = 'http://localhost:8082/api/file/v2/getLocation'
+file_api_url = 'https://file-azure-service.azurewebsites.net/api/file/v2/getLocation'
 BLOB_SERVICE_API = '2016-05-31'
 MAX_BLOB_SIZE = 268435456
 MAX_BLOCK_SIZE = 33554432
